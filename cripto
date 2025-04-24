@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Crypto Price Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the sparkline chart */
+        .sparkline-chart {
+            width: 100%;
+            height: 30px;
+        }
+        .sparkline-line {
+            fill: none;
+            stroke-width: 2;
+        }
+        .sparkline-positive {
+            stroke: green;
+        }
+        .sparkline-negative {
+            stroke: red;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-inter">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-semibold mb-6 text-center text-gray-800">Real-Time Crypto Price Tracker</h1>
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            #
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Logo
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Symbol
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Price
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            1h %
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            24h %
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            7d %
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Market Cap
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            24h Volume
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Circulating Supply
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Max Supply
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            7D Chart
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="crypto-table-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Sample coin data (replace with actual data structure)
+        const initialCoins = [
+            {
+                id: 'bitcoin',
+                name: 'Bitcoin',
+                symbol: 'BTC',
+                price: 64842.42,
+                market_cap: 1271599725835,
+                volume_24h: 43874950947,
+                price_change_percentage_1h: 0.43,
+                price_change_percentage_24h: 0.93,
+                price_change_percentage_7d: 11.11,
+                circulating_supply: 19666450,
+                max_supply: 21000000,
+                image: "https://assets.coingecko.com/coins/images/1/large/bitcoin.png?1696501457",
+                sparkline_in_7d: {
+                    price: [60000, 62000, 65000, 67000, 66000, 64000, 64842]
+                }
+            },
+            {
+                id: 'ethereum',
+                name: 'Ethereum',
+                symbol: 'ETH',
+                price: 3524.13,
+                market_cap: 423414963842,
+                volume_24h: 23547469307,
+                price_change_percentage_1h: -0.60,
+                price_change_percentage_24h: 3.21,
+                price_change_percentage_7d: 13.68,
+                circulating_supply: 120227618,
+                max_supply: null,
+                image: "https://assets.coingecko.com/coins/images/279/large/ethereum.png?1696501628",
+                sparkline_in_7d: {
+                    price: [3200, 3300, 3400, 3600, 3500, 3450, 3524]
+                }
+            },
+            {
+                id: 'tether',
+                name: 'Tether',
+                symbol: 'USDT',
+                price: 1.00,
+                market_cap: 106263539427,
+                volume_24h: 92288882007,
+                price_change_percentage_1h: 0.00,
+                price_change_percentage_24h: 0.00,
+                price_change_percentage_7d: -0.04,
+                circulating_supply: 106263539427,
+                max_supply: null,
+                image: "https://assets.coingecko.com/coins/images/325/large/Tether-logo.png?1696501661",
+                sparkline_in_7d: {
+                    price: [0.99, 1.00, 1.01, 1.00, 1.00, 1.00, 1.00]
+                }
+            },
+            {
+                id: 'xrp',
+                name: 'XRP',
+                symbol: 'XRP',
+                price: 0.62,
+                market_cap: 34125868846,
+                volume_24h: 1874281784,
+                price_change_percentage_1h: -0.46,
+                price_change_percentage_24h: 0.54,
+                price_change_percentage_7d: 6.18,
+                circulating_supply: 55075932838,
+                max_supply: 100000000000,
+                image: "https://assets.coingecko.com/coins/images/44/large/xrp-symbol-white-128.png?1696501493",
+                sparkline_in_7d: {
+                    price: [0.58, 0.60, 0.62, 0.64, 0.63, 0.61, 0.62]
+                }
+            },
+            {
+                id: 'binancecoin',
+                name: 'Binance Coin',
+                symbol: 'BNB',
+                price: 591.55,
+                market_cap: 91147513888,
+                volume_24h: 1874281784,
+                price_change_percentage_1h: -0.09,
+                price_change_percentage_24h: 1.20,
+                price_change_percentage_7d: 3.73,
+                circulating_supply: 153853638,
+                max_supply: 200000000,
+                image: "https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png?1696501970",
+                sparkline_in_7d: {
+                    price: [580, 590, 600, 610, 605, 595, 591]
+                }
+            },
+        ];
+
+        // Function to generate the sparkline chart SVG
+        function generateSparkline(prices, isPositive) {
+            const width = 100;
+            const height = 30;
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            const priceRange = maxPrice - minPrice;
+
+            const normalizePrice = (price) => {
+                if (priceRange === 0) return height;
+                return height - ((price - minPrice) / priceRange) * height;
+            };
+
+            let points = prices.map((price, index) => {
+                const x = (index / (prices.length - 1)) * width;
+                const y = normalizePrice(price);
+                return `${x},${y}`;
+            }).join(' ');
+
+            return `<svg width="${width}" height="${height}">
+                <path d="M0,${normalizePrice(prices[0])} L${points}"
+                    class="sparkline-line ${isPositive ? 'sparkline-positive' : 'sparkline-negative'}" />
+                </svg>`;
+        }
+
+        // Function to update the table with coin data
+        function updateCryptoTable(coins) {
+            const tableBody = document.getElementById('crypto-table-body');
+            if (!tableBody) return;
+
+            let tableHTML = '';
+            coins.forEach((coin, index) => {
+                const priceChange1h = coin.price_change_percentage_1h || 0;
+                const priceChange24h = coin.price_change_percentage_24h || 0;
+                const priceChange7d = coin.price_change_percentage_7d || 0;
+                const isPositive1h = priceChange1h >= 0;
+                const isPositive24h = priceChange24h >= 0;
+                const isPositive7d = priceChange7d >= 0;
+
+                tableHTML += `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">${index + 1}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <img src="${coin.image}" alt="${coin.name}" class="w-8 h-8 rounded-full mr-2">
+                                <div class="text-sm font-medium text-gray-900">${coin.name}</div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">${coin.symbol}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="text-sm font-medium text-gray-900">$${coin.price.toFixed(2)}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <span class="${isPositive1h ? 'text-green-500' : 'text-red-500'} text-sm font-medium">
+                                ${priceChange1h.toFixed(2)}%
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <span class="${isPositive24h ? 'text-green-500' : 'text-red-500'} text-sm font-medium">
+                                ${priceChange24h.toFixed(2)}%
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <span class="${isPositive7d ? 'text-green-500' : 'text-red-500'} text-sm font-medium">
+                                ${priceChange7d.toFixed(2)}%
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="text-sm text-gray-900">$${coin.market_cap.toLocaleString()}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right">
+                            <div class="text-sm text-gray-500">$${coin.volume_24h.toLocaleString()}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">${coin.circulating_supply.toLocaleString()} ${coin.symbol}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-500">${coin.max_supply ? coin.max_supply.toLocaleString() + ' ' + coin.symbol : '∞'}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            ${generateSparkline(coin.sparkline_in_7d.price, coin.sparkline_in_7d.price[0] <= coin.sparkline_in_7d.price[coin.sparkline_in_7d.price.length-1])}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableBody.innerHTML = tableHTML;
+        }
+
+        // Initial rendering of the table
+        updateCryptoTable(initialCoins);
+
+        // Simulate real-time updates using setInterval
+        setInterval(() => {
+            const updatedCoins = initialCoins.map(coin => {
+                const priceChange = (Math.random() - 0.5) * 10;
+                const volumeChange = (Math.random() - 0.5) * 20;
+                const oneHourChange = (Math.random() - 0.5) * 2;
+                const twentyFourHourChange = (Math.random() - 0.5) * 5;
+                const sevenDayChange = (Math.random() - 0.5) * 15;
+
+                return {
+                    ...coin,
+                    price: +(coin.price + priceChange).toFixed(2),
+                    price_change_percentage_1h: +oneHourChange.toFixed(2),
+                    price_change_percentage_24h: +twentyFourHourChange.toFixed(2),
+                    price_change_percentage_7d: +sevenDayChange.toFixed(2),
+                    volume_24h: +(coin.volume_24h * (1 + volumeChange / 100)).toFixed(2),
+                    sparkline_in_7d: {
+                        price: [
+                            ...coin.sparkline_in_7d.price.slice(1),
+                            +(coin.price + priceChange).toFixed(2)
+                        ]
+                    }
+                };
+            });
+            updateCryptoTable(updatedCoins);
+        }, 2000);
+    </script>
+</body>
+</html>
